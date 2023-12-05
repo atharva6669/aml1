@@ -1,0 +1,58 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import precision_score, recall_score
+
+# Load the MovieLens dataset
+movies = pd.read_csv('/path/to/your/directory/movies.csv')
+ratings = pd.read_csv('/path/to/your/directory/ratings.csv')
+
+# Merge movies and ratings data
+movie_ratings = pd.merge(ratings, movies, on='movieId')
+
+# Create a user-item matrix
+user_movie_matrix = movie_ratings.pivot_table(index='userId', columns='title', values='rating')
+
+# Fill missing values with 0
+user_movie_matrix = user_movie_matrix.fillna(0)
+
+# Split the data into a training set and a test set
+train_data, test_data = train_test_split(user_movie_matrix, test_size=0.2)
+
+# User-based collaborative filtering
+def user_based_collaborative_filtering(user_id, movie_title):
+    # Find users who rated the same movie
+    movie_ratings = user_movie_matrix[movie_title]
+    similar_users = user_movie_matrix.corrwith(movie_ratings)
+    
+    # Remove NaN values and sort by similarity
+    similar_users = similar_users.dropna()
+    similar_users = similar_users.sort_values(ascending=False)
+    
+    # Exclude the active user (if in the list)
+    if user_id in similar_users:
+        similar_users = similar_users.drop(user_id)
+    
+    # Filter out movies that the user has already rated
+    user_ratings = user_movie_matrix.loc[user_id]
+    similar_users = similar_users.drop(user_ratings[user_ratings > 0].index)
+    
+    return similar_users.index[:10]
+
+# Evaluate the recommendation system
+def evaluate_recommendations(user_id, test_data):
+    actual_movies_watched = test_data.columns[test_data.loc[user_id] > 0]
+    recommendations = user_based_collaborative_filtering(user_id, actual_movies_watched[0])
+    
+    # Calculate precision and recall
+    intersection = len(set(recommendations) & set(actual_movies_watched))
+    precision = intersection / len(recommendations)
+    recall = intersection / len(actual_movies_watched)
+    
+    return precision, recall
+
+# Test the recommendation system for a user
+user_id = 1
+precision, recall = evaluate_recommendations(user_id, test_data)
+print(f"Precision: {precision:.2f}")
+print(f"Recall: {recall:.2f}")
+

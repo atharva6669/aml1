@@ -1,0 +1,64 @@
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+# Load the Iris dataset
+data = load_iris()
+X, y = data.data, data.target
+
+# Split the data into a training and testing set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Create a base classifier (e.g., Decision Tree)
+base_classifier = DecisionTreeClassifier()
+
+# Apply bagging by creating an ensemble of base classifiers
+n_estimators = 10  # Number of base classifiers
+bagging = BaggingClassifier(base_classifier, n_estimators=n_estimators, random_state=42)
+
+# Fit the bagging model to the training data
+bagging.fit(X_train, y_train)
+
+# Make predictions using the bagging model
+y_pred = bagging.predict(X_test)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy of Bagging Classifier: {accuracy:.2%}")
+
+# Compare the accuracy with the base classifier (without bagging)
+base_classifier.fit(X_train, y_train)
+y_base_pred = base_classifier.predict(X_test)
+base_accuracy = accuracy_score(y_test, y_base_pred)
+print(f"Accuracy of Base Classifier: {base_accuracy:.2%}")
+
+# Analyze the impact on stability and generalization
+# You can compare the variance of predictions using bagging vs. a single base classifier
+
+bagging_predictions = []
+base_classifier_predictions = []
+n_iterations = 100
+
+for _ in range(n_iterations):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+    # Bagging predictions
+    bagging.fit(X_train, y_train)
+    y_pred = bagging.predict(X_test)
+    bagging_predictions.append(y_pred)
+    
+    # Base classifier predictions
+    base_classifier.fit(X_train, y_train)
+    y_base_pred = base_classifier.predict(X_test)
+    base_classifier_predictions.append(y_base_pred)
+
+# Calculate the variance of predictions
+bagging_variance = np.var(bagging_predictions)
+base_classifier_variance = np.var(base_classifier_predictions)
+
+print(f"Sample Variance of Bagging Predictions: {bagging_variance:.4f}")
+print(f"Sample Variance of Base Classifier Predictions: {base_classifier_variance:.4f}")

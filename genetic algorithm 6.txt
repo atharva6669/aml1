@@ -1,0 +1,55 @@
+import random
+
+# Define the objective function to be optimized
+def objective_function(x):
+    return -x**2 + 4*x
+
+# GA Parameters
+population_size = 100
+num_generations = 50
+mutation_rate = 0.1
+
+# Initialization
+population = [random.uniform(-5, 5) for _ in range(population_size)]
+
+# Main Genetic Algorithm Loop
+for generation in range(num_generations):
+    # Evaluate the fitness of each individual in the population
+    fitness_values = [objective_function(x) for x in population]
+
+    # Select parents for reproduction (using roulette wheel selection)
+    selected_parents = []
+    total_fitness = sum(fitness_values)
+    for _ in range(population_size):
+        rand_val = random.uniform(0, total_fitness)
+        cumulative_fitness = 0
+        for i, fitness in enumerate(fitness_values):
+            cumulative_fitness += fitness
+            if cumulative_fitness >= rand_val:
+                selected_parents.append(population[i])
+                break
+
+    # Create the next generation (crossover and mutation)
+    new_population = []
+    for _ in range(population_size):
+        parent1 = random.choice(selected_parents)
+        parent2 = random.choice(selected_parents)
+        
+        # Crossover
+        crossover_point = random.randint(0, 1)
+        child = parent1 * crossover_point + parent2 * (1 - crossover_point)
+        
+        # Apply mutation
+        if random.random() < mutation_rate:
+            mutation = random.uniform(-0.5, 0.5)
+            child += mutation
+
+        new_population.append(child)
+
+    population = new_population
+
+# Find the best solution
+best_solution = max(population, key=objective_function)
+best_fitness = objective_function(best_solution)
+
+print(f"Best solution: x = {best_solution}, f(x) = {best_fitness}")

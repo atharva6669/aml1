@@ -1,0 +1,45 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+
+# Load the Iris dataset and select two features
+iris = datasets.load_iris()
+X = iris.data[:100, :2]  # Use only the first two features
+y = iris.target[:100]     # Consider only two classes (0 and 1)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize weights and learning rate
+num_features = X_train.shape[1]
+weights = np.random.rand(num_features + 1)  # Include bias term
+learning_rate = 0.01
+
+# Perceptron Training Rule
+num_epochs = 100
+for epoch in range(num_epochs):
+    for i in range(X_train.shape[0]):
+        input_data = np.hstack((X_train[i], 1))  # Add bias
+        activation = np.dot(input_data, weights)
+        prediction = 1 if activation > 0 else 0
+        error = y_train[i] - prediction
+        weights += learning_rate * error * input_data
+
+# Plot the data points and decision boundary
+plt.scatter(X_train[y_train == 0][:, 0], X_train[y_train == 0][:, 1], c='blue', label='Class 0')
+plt.scatter(X_train[y_train == 1][:, 0], X_train[y_train == 1][:, 1], c='red', label='Class 1')
+
+# Corrected calculation of decision boundary
+x_min, x_max = X_train[:, 0].min() - 1, X_train[:, 0].max() + 1
+y_min, y_max = X_train[:, 1].min() - 1, X_train[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.01), np.arange(y_min, y_max, 0.01))
+Z = np.dot(np.c_[xx.ravel(), yy.ravel(), np.ones_like(xx.ravel())], weights)
+Z = Z.reshape(xx.shape)
+plt.contour(xx, yy, Z, colors='k', levels=[0], linewidths=2)
+
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.legend()
+plt.title('Perceptron Decision Boundary on Iris Dataset (2 Features)')
+plt.show()

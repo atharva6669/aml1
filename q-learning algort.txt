@@ -1,0 +1,77 @@
+import numpy as np
+import random
+
+# Define the grid world environment
+grid_world = np.array([
+    [0, 0, 0, 0, 0],
+    [0, -1, 0, -1, 0],
+    [0, 0, 0, 0, 0],
+    [0, -1, 0, -1, 0],
+    [0, 0, 0, 0, 1]
+])  # 0 represents empty cells, -1 represents obstacles, and 1 is the goal state
+
+# Define Q-Learning parameters
+learning_rate = 0.1
+discount_factor = 0.9
+exploration_prob = 0.2
+num_episodes = 1000
+
+# Initialize the Q-table
+num_states = grid_world.size
+num_actions = 4  # 4 possible actions: up, down, left, right
+q_table = np.zeros((num_states, num_actions))
+
+# Define state and action mapping functions
+def state_to_index(state):
+    return state[0] * grid_world.shape[1] + state[1]
+
+def index_to_state(index):
+    row = index // grid_world.shape[1]
+    col = index % grid_world.shape[1]
+    return (row, col)
+
+# Define possible actions (up, down, left, right)
+actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+# Q-Learning algorithm
+for episode in range(num_episodes):
+    state = (0, 0)  # Start state
+    while state != (4, 4):  # Continue until reaching the goal state
+        current_state_index = state_to_index(state)
+
+        # Choose an action with epsilon-greedy policy
+        if random.uniform(0, 1) < exploration_prob:
+            action = random.choice(range(num_actions))  # Exploration
+        else:
+            action = np.argmax(q_table[current_state_index])  # Exploitation
+
+        # Take the chosen action and observe the next state and reward
+        new_state = (state[0] + actions[action][0], state[1] + actions[action][1])
+        if new_state[0] < 0 or new_state[0] >= grid_world.shape[0] or new_state[1] < 0 or new_state[1] >= grid_world.shape[1] or grid_world[new_state] == -1:
+            # If the new state is outside the grid or is an obstacle, penalize the agent
+            reward = -1
+            new_state = state
+        else:
+            reward = grid_world[new_state]
+
+        new_state_index = state_to_index(new_state)
+
+        # Update the Q-value for the current state-action pair
+        q_table[current_state_index][action] = (1 - learning_rate) * q_table[current_state_index][action] + \
+                                                learning_rate * (reward + discount_factor * np.max(q_table[new_state_index]))
+
+        state = new_state
+
+# Once training is complete, follow the learned Q-table to find the optimal path from the start to the goal state
+state = (0, 0)
+path = [state]
+while state != (4, 4):
+    state_index = state_to_index(state)
+    action = np.argmax(q_table[state_index])
+    new_state = (state[0] + actions[action][0], state[1] + actions[action][1])
+    path.append(new_state)
+    state = new_state
+
+# Print the learned path
+for step, state in enumerate(path):
+    print(f"Step {step}: {state}")

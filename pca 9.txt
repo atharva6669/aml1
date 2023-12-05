@@ -1,0 +1,35 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.datasets import load_iris
+
+# Load the dataset (replace with your dataset)
+data = load_iris()
+X = data.data
+y = data.target
+
+# Apply PCA for dimensionality reduction
+num_components = 2  # Number of principal components to keep (adjust as needed)
+pca = PCA(n_components=num_components)
+X_reduced = pca.fit_transform(X)
+
+# Create a scatter plot to visualize the data in the lower-dimensional space
+plt.figure(figsize=(8, 6))
+
+# Plot the data points in the lower-dimensional space
+for label in np.unique(y):
+    plt.scatter(
+        X_reduced[y == label, 0],
+        X_reduced[y == label, 1],
+        label=data.target_names[label],
+    )
+
+# Add labels and a legend
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.title('PCA of Iris Dataset')
+plt.legend()
+
+# Show the plot
+plt.show()
+
